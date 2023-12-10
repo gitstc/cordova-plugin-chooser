@@ -60,14 +60,14 @@ public class Chooser extends CordovaPlugin {
 	private CallbackContext callback;
 	private Boolean includeData;
 
-	public void chooseFile (CallbackContext callbackContext, String accept, Boolean includeData) {
+	public void chooseFile (CallbackContext callbackContext, String accept, Boolean includeData, Boolean allowMultiple) {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.setType("*/*");
 		if (!accept.equals("*/*")) {
 			intent.putExtra(Intent.EXTRA_MIME_TYPES, accept.split(","));
 		}
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
-		intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+		intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple);
 		intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
 		this.includeData = includeData;
 
@@ -88,7 +88,7 @@ public class Chooser extends CordovaPlugin {
 	) {
 		try {
 			if (action.equals(Chooser.ACTION_OPEN)) {
-				this.chooseFile(callbackContext, args.getString(0), args.getBoolean(1));
+				this.chooseFile(callbackContext, args.getString(0), args.getBoolean(1), args.getBoolean(2));
 				return true;
 			}
 		}
@@ -104,42 +104,47 @@ public class Chooser extends CordovaPlugin {
 		try {
 			if (requestCode == Chooser.PICK_FILE_REQUEST && this.callback != null) {
 				if (resultCode == Activity.RESULT_OK) {
-					Uri uri = data.getData();
+					JSONArray filesArray = new JSONArray();
 
-					if (uri != null) {
-						ContentResolver contentResolver =
-							this.cordova.getActivity().getContentResolver()
-						;
+					if(null != data.getClipData()) {
+						for(int i=0; i<data.getClipData().getItemCount(); i++) {
+							Uri uri = data.getClipData().getItemAt(i).getUri();
 
-						String name = Chooser.getDisplayName(contentResolver, uri);
+							if (uri != null) {
+								ContentResolver contentResolver =
+									this.cordova.getActivity().getContentResolver()
+								;
 
-						String mediaType = contentResolver.getType(uri);
-						if (mediaType == null || mediaType.isEmpty()) {
-							mediaType = "application/octet-stream";
+								String name = Chooser.getDisplayName(contentResolver, uri);
+
+								String mediaType = contentResolver.getType(uri);
+								if (mediaType == null || mediaType.isEmpty()) {
+									mediaType = "application/octet-stream";
+								}
+
+								String base64 = "";
+
+								if (this.includeData) {
+									byte[] bytes = Chooser.getBytesFromInputStream(
+										contentResolver.openInputStream(uri)
+									);
+
+									base64 = Base64.encodeToString(bytes, Base64.DEFAULT);
+								}
+
+								JSONObject result = new JSONObject();
+
+								result.put("data", base64);
+								result.put("mediaType", mediaType);
+								result.put("name", name);
+								result.put("uri", uri.toString());
+
+								filesArray.put(result);
+							}
 						}
-
-						String base64 = "";
-
-						if (this.includeData) {
-							byte[] bytes = Chooser.getBytesFromInputStream(
-								contentResolver.openInputStream(uri)
-							);
-
-							base64 = Base64.encodeToString(bytes, Base64.DEFAULT);
-						}
-
-						JSONObject result = new JSONObject();
-
-						result.put("data", base64);
-						result.put("mediaType", mediaType);
-						result.put("name", name);
-						result.put("uri", uri.toString());
-
-						this.callback.success(result.toString());
 					}
-					else {
-						this.callback.error("File URI was null.");
-					}
+
+					this.callback.success(filesArray);
 				}
 				else if (resultCode == Activity.RESULT_CANCELED) {
 					this.callback.success("RESULT_CANCELED");

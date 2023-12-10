@@ -108,8 +108,8 @@ function getFileInternal (
 }
 
 module.exports = {
-	getFile: function (accept, successCallback, failureCallback) {
-		return getFileInternal(accept, true, successCallback, failureCallback);
+	getFile: function (accept, allowMultiple, successCallback, failureCallback) {
+		return getFileInternal(accept, true, allowMultiple, successCallback, failureCallback);
 	},
 	getFileMetadata: function (accept, successCallback, failureCallback) {
 		return getFileInternal(accept, false, successCallback, failureCallback);
