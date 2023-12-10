@@ -34,6 +34,8 @@ public class Chooser extends CordovaPlugin {
 			os.write(buffer, 0, len);
 		}
 
+		is.close();
+
 		return os.toByteArray();
 	}
 
