@@ -45,6 +45,7 @@ function from_base64 (sBase64, nBlocksSize) {
 function getFileInternal (
 	accept,
 	includeData,
+	allowMultiple,
 	successCallback,
 	failureCallback
 ) {
@@ -92,7 +93,8 @@ function getFileInternal (
 				(typeof accept === 'string' ?
 					accept.toLowerCase().replace(/\s/g, '') :
 					undefined) || '*/*',
-				includeData
+				includeData,
+				allowMultiple
 			]
 		);
 	});
