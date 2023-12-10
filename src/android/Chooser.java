@@ -136,7 +136,7 @@ public class Chooser extends CordovaPlugin {
 		}
 	}
 
-	private JSONObject processFile(Uri uri) throws JSONException {
+	private JSONObject processFile(Uri uri) throws IOException, JSONException {
 		ContentResolver contentResolver = this.cordova.getActivity().getContentResolver();
 
 		String name = Chooser.getDisplayName(contentResolver, uri);
