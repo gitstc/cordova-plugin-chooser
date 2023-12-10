@@ -1,17 +1,17 @@
 /** @see sodiumutil */
-function from_base64 (sBase64, nBlocksSize) {
-	function _b64ToUint6 (nChr) {
+function from_base64(sBase64, nBlocksSize) {
+	function _b64ToUint6(nChr) {
 		return nChr > 64 && nChr < 91 ?
 			nChr - 65 :
-		nChr > 96 && nChr < 123 ?
-			nChr - 71 :
-		nChr > 47 && nChr < 58 ?
-			nChr + 4 :
-		nChr === 43 ?
-			62 :
-		nChr === 47 ?
-			63 :
-			0;
+			nChr > 96 && nChr < 123 ?
+				nChr - 71 :
+				nChr > 47 && nChr < 58 ?
+					nChr + 4 :
+					nChr === 43 ?
+						62 :
+						nChr === 47 ?
+							63 :
+							0;
 	}
 
 	var nInLen = sBase64.length;
@@ -42,7 +42,7 @@ function from_base64 (sBase64, nBlocksSize) {
 	return taBytes;
 }
 
-function getFileInternal (
+function getFileInternal(
 	accept,
 	includeData,
 	allowMultiple,
@@ -65,23 +65,26 @@ function getFileInternal (
 				}
 
 				try {
-					var o = JSON.parse(json);
+					var p = [];
+					json.forEach(function (o) {
+						if (includeData) {
+							var base64Data = o.data.replace(
+								/[^A-Za-z0-9\+\/]/g,
+								''
+							);
 
-					if (includeData) {
-						var base64Data = o.data.replace(
-							/[^A-Za-z0-9\+\/]/g,
-							''
-						);
+							o.data = from_base64(base64Data);
+							o.dataURI =
+								'data:' + o.mediaType + ';base64,' + base64Data;
+						}
+						else {
+							delete o.data;
+						}
 
-						o.data = from_base64(base64Data);
-						o.dataURI =
-							'data:' + o.mediaType + ';base64,' + base64Data;
-					}
-					else {
-						delete o.data;
-					}
+						p.push(o);
+					})
 
-					resolve(o);
+					resolve(p);
 				}
 				catch (err) {
 					reject(err);
