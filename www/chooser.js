@@ -58,6 +58,7 @@ function getFileInternal (
 	var result = new Promise(function (resolve, reject) {
 		cordova.exec(
 			function (json) {
+				console.log(json);
 				if (json === 'RESULT_CANCELED') {
 					resolve();
 					return;
